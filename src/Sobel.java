@@ -3,111 +3,86 @@ import java.awt.*;
 import java.io.File;
 
 public class Sobel {
-    double[][] Xfilter;
-    double[][] Yfilter;
-    int[][] img;
+    private double[][] Xfilter;
+    private double[][] Yfilter;
+    private int[][] img;
 
+    /**
+     * a Sobel operator that finds the edges of objects in images by applying filters
+     * @param Xfilter the filter to use in the X direction
+     * @param Yfilter the filter to use in the Y direction
+     * @param img the image to apply the operator to
+     */
     public Sobel(double[][] Xfilter, double[][] Yfilter, int[][] img){
         this.Xfilter = Xfilter;
         this.Yfilter = Yfilter;
         this.img = img;
     }
 
+    /**
+     * runs the operator on the image
+     * @return an image with the outlines of the image
+     * @throws Exception
+     */
     public int[][] go()throws Exception{
+        //create and run the filters on the image with both the x and y
         Filter filterX = new Filter(img,Xfilter);
         Filter filterY = new Filter(img,Yfilter);
         int[][] Ximg = filterX.go();
         int[][] Yimg = filterY.go();
 
 
-        int[][] FinImg = new int[Ximg.length][Ximg[0].length];
-        int min = 255;
-        int max = 0;
-        int xmin = 255;
-        int xmax = 0;
-        int ymin = 255;
-        int ymax = 0;
-
-        for(int x = 0; x<Ximg[0].length;x++){
-            for(int y = 0; y<Ximg.length;y++){
-                double mag = Math.pow(Math.pow(Ximg[y][x],2)+Math.pow(Yimg[y][x],2),0.5);
-                FinImg[y][x] = (int)mag;
-                if(mag>max){
-                    max = (int)mag;
-                }
-                if(mag<min){
-                    min = (int)mag;
-                }
-
-                if(Ximg[y][x]>xmax){
-                    xmax = Ximg[y][x];
-                }
-                if(Ximg[y][x]<xmin){
-                    xmin = Ximg[y][x];
-                }
-
-                if(Yimg[y][x]>ymax){
-                    ymax = Yimg[y][x];
-                }
-                if(Yimg[y][x]<ymin){
-                    ymin = Yimg[y][x];
-                }
-            }
-        }
-
-        for(int x = 0; x<Ximg[0].length;x++){
-            for(int y = 0; y<Ximg.length;y++){
-                FinImg[y][x] = map(FinImg[y][x],min,max,0,255);
-                Ximg[y][x] = map(Ximg[y][x],xmin,xmax,0,255);
-                Yimg[y][x] = map(Yimg[y][x],ymin,ymax,0,255);
-            }
-        }
-
-        System.out.println("X min: "+xmin);
-        System.out.println("X max: "+xmax);
-
-        System.out.println("Y min: "+ymin);
-        System.out.println("Y max: "+ymax);
+        int[][] FinImg = new int[Ximg.length][Ximg[0].length];//create a var to store the final img
 
 
-        System.out.println("max: "+max);
-        System.out.println("min: "+min);
+        for(int x = 0; x<Ximg[0].length;x++){//loop through x
+            for(int y = 0; y<Ximg.length;y++){//loop through y
+                FinImg[y][x] = (int)Math.pow(Math.pow(Ximg[y][x],2)+Math.pow(Yimg[y][x],2),0.5);//sqrt(x^2+y^2) gets the magnitude
+            }//end y
+        }//end x
 
+        //save the filtered imgs cuz they are cool
         ImageIO.write(Filter.intArr2BufferedImg(Ximg),"jpg",new File("Ximg.jpg"));
         ImageIO.write(Filter.intArr2BufferedImg(Yimg),"jpg",new File("Yimg.jpg"));
-        return FinImg;
+        return FinImg;//return the final image
     }
 
-    private int map(int x, int in_min, int in_max, int out_min, int out_max)
-    {
-        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-    }
-
+    /**
+     * main entry point of the program
+     */
     public static void main(String[] args) throws Exception{
+        //read the img file
         File f = new File("img.jpg");
         int[][] img = Filter.bufferedImg2IntArr(ImageIO.read(f));
-        double[][] VLine = {
+
+        //some filters
+        double[][] VLine = {//used for vertical lines
                 {1, 2, 1},
                 {0, 0, 0},
                 {-1, -2, -1}};
-        double[][] HLine={
+        double[][] HLine={//used of horizontal lines
                 {1, 0, -1},
                 {2, 0, -2},
                 {1, 0, -1}};
-        double[][] blurarr = {
-                {2, 2, 2},
-                {2, 2, 2},
-                {2, 2, 2}};
+        double[][] blurarr = {//used for blurring
+                {1, 2, 1},
+                {2, 4, 2},
+                {1, 2, 1}};
+        double[][] identity = {//used to not change it
+                {0, 0, 0},
+                {0, 1, 0},
+                {0, 0, 0}};
 
-        Filter blur = new Filter(img,blurarr);
+        Filter blur = new Filter(img,blurarr);//create the Filter object
         System.out.println("running blur");
-        img = blur.go();
+        img = blur.go(10);//run it 10 times
         System.out.println("finished blur");
-        ImageIO.write(Filter.intArr2BufferedImg(img),"jpg",new File("blurred.jpg"));
-        Sobel sobel = new Sobel(VLine,HLine,img);
+        ImageIO.write(Filter.intArr2BufferedImg(img),"jpg",new File("blurred.jpg"));//save the blurred file
+
+        Sobel sobel = new Sobel(VLine,HLine,img);//create the Sobel object
         System.out.println("running sobel");
-        img = sobel.go();
+        img = sobel.go();//run it
         System.out.println("finished sobel");
-        ImageIO.write(Filter.intArr2BufferedImg(img),"jpg",new File("sobel.jpg"));
+        ImageIO.write(Filter.intArr2BufferedImg(img),"jpg",new File("sobel.jpg"));//save the final file
     }
 }
