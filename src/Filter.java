@@ -24,19 +24,21 @@ public class Filter {
     }
 
     public int[][] go() {
-        int half = (int)(filter.length/2.0)-1;
+        int half = ((filter.length-1)/2);
         int[][] ret = new int[img.length-2*half][img[0].length-2*half];
-        for (int x = half; x < ret[0].length; x++) {
-            for (int y = half; y < ret.length; y++) {
+        for (int x = 0; x < ret[0].length; x++) {
+            for (int y = 0; y < ret.length; y++) {
                 double[] result = new double[filter.length*filter[0].length];
                 int index = 0;
                 for (int dX = 0; dX < filter[0].length; dX++) {
                     for (int dY = 0; dY < filter.length; dY++) {
                         int relX = x+dX-half;
                         int relY = y+dY-half;
-                        if(relX>-1&&relY>-1&&relX<ret[0].length&&relY<ret.length){
-                            result[index] = img[relY][relX]*filter[dY][dX];
+                        if(relX+half>-1&&relY+half>-1&&relX+half<ret[0].length&&relY+half<ret.length){
+                            result[index] = img[relY+half][relX+half]*filter[dY][dX];
                             index++;
+                        }else{
+                            int i = 0;
                         }
                     }
                 }
